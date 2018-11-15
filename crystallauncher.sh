@@ -136,7 +136,7 @@ function installCl {
 	
 	mkdir -p ~/.local/share/applications
 	
-	echo $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
+	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
 	
 	cp "$0" "$INSTALL_DIR/launcher.sh"
 
