@@ -139,7 +139,8 @@ function installCl {
 	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
 	update-desktop-database ~/.local/share/applications
 	
-	cp "$0" "$INSTALL_DIR/launcher.sh"
+	SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+	cp "$SCRIPT_DIR" "$INSTALL_DIR/launcher.sh"
 
 	distroSpecSetup
 
