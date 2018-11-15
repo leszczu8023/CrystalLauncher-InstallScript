@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INSTALL_DIR=~/.crystalLauncher
+INSTALL_DIR=$HOME/.crystalLauncher
 
 JRE_I586='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-i586.tar.gz'
 JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
@@ -132,19 +132,19 @@ function installCl {
 		if [ $? -ne 0 ]; then echo "Download launcher failed!!!"; exit; fi;
 	fi;
 
-	echo "$INSTALL_DIR/bin" > ~/.crystalinst
+	echo "$INSTALL_DIR/bin" > $HOME/.crystalinst
 	
 	wget $ICON -O $INSTALL_DIR/icon.png
 	
 	wget $LAUNCHER_SCRIPT -O $INSTALL_DIR/launcher.sh
 	if [ $? -ne 0 ]; then echo "Download launcher failed!!!"; exit; fi;
 	
-	chmod 775 $INSTALL_DIR/launcher.sh
+	chmod 775 "$INSTALL_DIR/launcher.sh"
 	
-	mkdir -p ~/.local/share/applications
+	mkdir -p $HOME/.local/share/applications
 	
-	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
-	update-desktop-database ~/.local/share/applications
+	echo -e $ACTIVATOR > $HOME/.local/share/applications/CrystalLauncher.desktop
+	update-desktop-database $HOME/.local/share/applications
 	
 	distroSpecSetup
 
@@ -172,8 +172,8 @@ case "$1" in
 		;;
 	"--uninstall")
 		rm -rf $INSTALL_DIR;
-		rm ~/.local/share/applications/CrystalLauncher.desktop
-		update-desktop-database ~/.local/share/applications
+		rm $HOME/.local/share/applications/CrystalLauncher.desktop
+		update-desktop-database $HOME/.local/share/applications
 		exit
 		;;
 	"--force-update")
