@@ -7,6 +7,8 @@ JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
 
 ICON='http://main.crystal-launcher.pl/releases/icon.png'
 
+LAUNCHER_SCRIPT='https://raw.githubusercontent.com/leszczu8023/CrystalLauncher-LinuxScript/master/crystallauncher.sh'
+
 LAUNCHER_JAR='http://main.crystal-launcher.pl/releases/other/CrystalLauncher.jar'
 ACTIVATOR="[Desktop Entry]\n
 Name=Crystal Launcher\n
@@ -134,14 +136,14 @@ function installCl {
 	
 	wget $ICON -O $INSTALL_DIR/icon.png
 	
+	wget $LAUNCHER_SCRIPT -O $INSTALL_DIR/launcher.sh
+	if [ $? -ne 0 ]; then echo "Download launcher failed!!!"; exit; fi;
+	
 	mkdir -p ~/.local/share/applications
 	
 	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
 	update-desktop-database ~/.local/share/applications
 	
-	SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-	cp "$SCRIPT_DIR" "$INSTALL_DIR/launcher.sh"
-
 	distroSpecSetup
 
 	echo `date` > $INSTALL_DIR/installFlag
