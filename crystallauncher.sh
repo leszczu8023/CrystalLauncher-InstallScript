@@ -139,6 +139,8 @@ function installCl {
 	wget $LAUNCHER_SCRIPT -O $INSTALL_DIR/launcher.sh
 	if [ $? -ne 0 ]; then echo "Download launcher failed!!!"; exit; fi;
 	
+	chmod 775 $INSTALL_DIR/launcher.sh
+	
 	mkdir -p ~/.local/share/applications
 	
 	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
