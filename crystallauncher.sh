@@ -170,7 +170,8 @@ case "$1" in
 		;;
 	"--uninstall")
 		rm -rf $INSTALL_DIR;
-		rm ~/Desktop/crystallauncher.desktop
+		rm ~/.local/share/applications/CrystalLauncher.desktop
+		update-desktop-database ~/.local/share/applications
 		exit
 		;;
 	"--force-update")
