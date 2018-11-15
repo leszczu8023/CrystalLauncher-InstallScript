@@ -5,7 +5,18 @@ INSTALL_DIR=~/.crystalLauncher
 JRE_I586='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-i586.tar.gz'
 JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
 
+ICON='http://main.crystal-launcher.pl/releases/icon.png'
+
 LAUNCHER_JAR='http://main.crystal-launcher.pl/releases/other/CrystalLauncher.jar'
+ACTIVATOR="[Desktop Entry]\n
+Name=Crystal Launcher\n
+GenericName=CrystalLauncher\n
+Comment=A Minecraft modpack launcher\n
+Exec=$INSTALL_DIR/launcher.sh\n
+Icon=$INSTALL_DIR/icon.png\n
+Terminal=false\n
+Type=Application\n
+Categories=Game;\n"
 
 JAVA_VERSION='1.8.0_181'
 DEBUG=0
@@ -120,6 +131,14 @@ function installCl {
 	fi;
 
 	echo "$INSTALL_DIR/bin" > ~/.crystalinst
+	
+	wget $ICON -O $INSTALL_DIR/icon.png
+	
+	mkdir -p ~/.local/share/applications
+	
+	echo $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
+	
+	cp "$0" "$INSTALL_DIR/launcher.sh"
 
 	distroSpecSetup
 
@@ -147,6 +166,7 @@ case "$1" in
 		;;
 	"--uninstall")
 		rm -rf $INSTALL_DIR;
+		rm ~/Desktop/crystallauncher.desktop
 		exit
 		;;
 	"--force-update")
