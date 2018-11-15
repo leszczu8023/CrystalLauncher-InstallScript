@@ -66,7 +66,7 @@ function distroSpecSetup {
 			echo `notImplemented`;
 			;;
 		opensuse)
-			echo `notImplemented`;
+			echo 'nothing to do with packages this time :)'
 			;;
 		archlinux)
 			echo `notImplemented`;
@@ -137,6 +137,7 @@ function installCl {
 	mkdir -p ~/.local/share/applications
 	
 	echo -e $ACTIVATOR > ~/.local/share/applications/CrystalLauncher.desktop
+	update-desktop-database ~/.local/share/applications
 	
 	cp "$0" "$INSTALL_DIR/launcher.sh"
 
