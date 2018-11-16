@@ -1,4 +1,5 @@
-#!/usr/bin/env bash #Żeby działało z niestandardowymi lokalizacjami Basha
+#!/usr/bin/env bash
+# Żeby działało z niestandardowymi lokalizacjami Basha
 
 INSTALL_DIR=$HOME/.crystalLauncher
 
@@ -121,7 +122,7 @@ function installCl {
 		echo "Downloading 64-bit Java $JAVA_VERSION runtime...";
 		echo "";
 		wget $JRE_X64 -O $INSTALL_DIR/.tmp/runtime.tar.gz
-		if [[ $? -ne 0 ]; then echo "Download runtime failed!!!"; exit; fi;
+		if [[ $? -ne 0 ]]; then echo "Download runtime failed!!!"; exit; fi;
 		echo "";
 	elif [[ ${MACHINE_TYPE} == 'i586' ]];
 	then
@@ -215,9 +216,6 @@ case "$1" in
 	"--help")
 		echo "Usage: $0 --[debug|reinstall|uninstall|install-only|clean-cache|force-update]"
 		exit 0
-	*)
-		echo "Usage: $0 --[debug|reinstall|uninstall|install-only|clean-cache|force-update]"
-		exit 1
 esac
 		
 if [ -f $INSTALL_DIR/installFlag ] && [ -f $INSTALL_DIR/bin/bootstrap.jar ];
