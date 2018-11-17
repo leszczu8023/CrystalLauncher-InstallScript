@@ -191,6 +191,7 @@ function installCl {
 	distroSpecSetup
 	
 	if [[ "$LINUX" == 1 ]]; then
+		echo "Installing portable Java environment..."
 		setupRuntime
 	fi
 	
