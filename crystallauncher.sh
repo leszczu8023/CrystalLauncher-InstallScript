@@ -47,7 +47,7 @@ function downloadFile {
 			exit 1; 
 		fi;
 	elif [[ "$IS_CURL" == 0 ]]; then
-		curl -o "$2" "$1";
+		curl -L -o "$2" "$1";
 		if [[ $? -ne 0 ]]; then 
 			echo "Downloading launcher failed!!!"; 
 			exit 1; 
