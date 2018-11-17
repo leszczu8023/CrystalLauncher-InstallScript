@@ -2,8 +2,17 @@
 
 Simple installation method:
 
+Linux:
 ```bash
-wget -O - http://bit.ly/crystal4Linux | bash
+wget -O - http://bit.ly/setupCrystal | bash
+```
+
+FreeBSD:
+```bash
+# first, you must have installed bash shell for running script
+pkg install bash
+
+curl -L https://bit.ly/setupCrystal | bash
 ```
 
 ## Checked linux distros:
