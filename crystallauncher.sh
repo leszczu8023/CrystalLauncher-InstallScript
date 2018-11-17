@@ -207,7 +207,8 @@ function installCl {
 	mkdir -p "$HOME/.local/share/applications"
 	
 	echo -e $ACTIVATOR > "$HOME/.local/share/applications/CrystalLauncher.desktop"
-	update-desktop-database "$HOME/.local/share/applications"
+	
+	which update-desktop-database > /dev/null  && { update-desktop-database "$HOME/.local/share/applications"; }
 
 	echo `date` > "$INSTALL_DIR/installFlag"
 }
