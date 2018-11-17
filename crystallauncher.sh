@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Żeby działało z niestandardowymi lokalizacjami Basha
 
 INSTALL_DIR=$HOME/.crystalLauncher
 
@@ -24,21 +23,47 @@ Categories=Game;\n"
 JAVA_VERSION='1.8.0_181'
 DEBUG=0
 
-export JAVA_HOME=$INSTALL_DIR/runtime/jre$JAVA_VERSION
-export PATH=$JAVA_HOME/bin:$PATH
+function runAsRoot {
+	if [[ "`whoami`" == "root" ]]; then
+		$*
+	elif [[ `which sudo` == 0 ]]; then
+		sudo $*
+	else
+		su root -c "$*"
+	fi
+}
 
-SUDO_CMD="which sudo" # To nie jest błąd
+function downloadFile {
+	#$1 - source URL
+	#$2 - target location
+    
+	IS_WGET=`which wget > /dev/null && { echo 1; }`
+	IS_CURL=`which curl > /dev/null && { echo 1; }`
+    
+	if [[ "$IS_WGET" == 1 ]]; then
+		wget "$1" -O "$2";
+		if [[ $? -ne 0 ]]; then 
+			echo "Downloading launcher failed!!!"; 
+			exit 1; 
+		fi;
+	elif [[ "$IS_CURL" == 0 ]]; then
+		curl -o "$2" "$1";
+		if [[ $? -ne 0 ]]; then 
+			echo "Downloading launcher failed!!!"; 
+			exit 1; 
+		fi;
+	else
+    		echo "Unable to find wget and curl in system... Pleas install one of it..."
+		exit 1; 
+	fi
+}
 
-if $SUDO_CMD; then # Nie na każdym distro jest sudo zainstalowane
-	SUDO_CMD="sudo"
-else
-	SUDO_CMD="su root -c"
-fi
 
 function osType {
 	case `uname` in
 		Linux)
 			LINUX=1
+			FBSD=0
 			which yum > /dev/null && { echo centos; return; }
 			which zypper > /dev/null  && { echo opensuse; return; }
 			which pacman > /dev/null  && { echo archlinux; return; }
@@ -46,14 +71,15 @@ function osType {
 			;;
 		FreeBSD)
 			FBSD=1
-			which pkg > /dev/null && { echo fbsd_pkg; return; }
+			LINUX=0
+			which pkg > /dev/null && { echo fbsdpkg; return; }
 			;;
 		*)
+			FBSD=0
 			LINUX=0
-			;;
 	esac
 	
-	if [[ "$LINUX" -ne 1 && "$FBSD" -ne 1]]; then
+	if [[ "$LINUX" -ne 1 && "$FBSD" -ne 1 ]]; then
 		echo "This Crystal Launcher version is designed for running only on Linux and FreeBSD operating systems..."
 		exit 1
 	fi
@@ -66,7 +92,7 @@ function notImplemented {
 function aptInstaIfNe {
 	if [ $(dpkg-query -W -f='${Status}' $1 2>/dev/null | grep -c "ok installed") -eq 0  ];
 	then
-		$SUDO_CMD apt -y install $1;
+		runAsRoot apt -y install $1;
 	fi;
 }
 
@@ -76,114 +102,139 @@ function setupDebian {
 }
 
 function setupFreeBSD {
-	echo "Installing Java and Official Minecraft Client package"
-	$SUDO_CMD pkg install openjdk8-jre openjfx8-devel minecraft-launcher
+	echo "Checking packages... Please enter root password if needed"
+	runAsRoot env ASSUME_ALWAYS_YES=YES pkg install java/openjdk8-jre java/openjfx8-devel games/minecraft-client
+	
+	echo "customjvmdir.path=/usr/local/share/minecraft-client/minecraft-runtime">"$INSTALL_DIR/bin/config.prop"
+	echo "customjvmdir.use=true">>"$INSTALL_DIR/bin/config.prop"
 }
 
 function distroSpecSetup {
-	case `osType` in
+	OS=`osType`
+	echo "Detected OS: $OS"
+	case "$OS" in
 		centos)
-			echo `notImplemented`;
+			notImplemented;
 			;;
 		opensuse)
 			echo 'nothing to do with packages this time :)'
 			;;
 		archlinux)
-			echo `notImplemented`;
+			notImplemented;
 			;;
 		debian)
 			setupDebian;
 			;;
-		fbsd_pkg)
-			echo `setupFreeBSD`;
+		fbsdpkg)
+			setupFreeBSD;
+			;;
 		*)
 			notImplemented;
 			;;
 	esac
 }
 
+function setupRuntime {
+	export JAVA_HOME=$INSTALL_DIR/runtime/jre$JAVA_VERSION
+	export PATH=$JAVA_HOME/bin:$PATH
+
+	MACHINE_TYPE=`uname -m`
+	[[ $MACHINE_TYPE = "amd64" ]] && MACHINE_TYPE=x86_64 # Fix dla ArchLinuxa i pochodnych
+	
+	if [[ ${MACHINE_TYPE} == 'x86_64' ]];
+	then
+		echo "Downloading 64-bit Java $JAVA_VERSION runtime...";
+		echo "";
+		downloadFile "$JRE_X64" "$INSTALL_DIR/.tmp/runtime.tar.gz"
+		echo ""
+	elif [[ ${MACHINE_TYPE} == 'i586' ]];
+	then
+		echo "Using 32Bit computer is not recommended, upgrade PC to 64Bit CPU or install 64Bit OS"
+		echo "Downloading 32-bit Java $JAVA_VERSION runtime...";
+		echo "";
+		downloadFile "$JRE_I586" "$INSTALL_DIR/.tmp/runtime.tar.gz"
+		echo ""
+	else 
+		echo "Unsupported architecture ${MACHINE_TYPE}...";
+		echo "";
+		exit 1
+	fi;
+
+	echo "Extracting...";
+	tar xzf "$INSTALL_DIR/.tmp/runtime.tar.gz" -C "$INSTALL_DIR/runtime"
+	
+	rm "$INSTALL_DIR/.tmp/runtime.tar.gz"
+	
+	"$JAVA_HOME/bin/java" -version 2> /dev/null
+	ERROR=$?
+	if [ $ERROR -ne 0 ];
+	then
+		echo "Process launch failed! Check this message...";
+		"$JAVA_HOME/bin/java" -version
+		exit 1
+	fi;
+}
+
 function installCl {
-	echo "Crystal Launcher installation script v1.0";
+	echo "Crystal Launcher installation script";
 	if [[ -e $INSTALL_DIR ]];
 	then
 		echo "Removing old directory...";
 		rm -rf $INSTALL_DIR;
 	fi;
 
-	mkdir -p $INSTALL_DIR;
-	mkdir -p $INSTALL_DIR/runtime;
-	mkdir -p $INSTALL_DIR/.tmp
-	mkdir -p $INSTALL_DIR/bin
+	mkdir -p "$INSTALL_DIR"
+	mkdir -p "$INSTALL_DIR/runtime"
+	mkdir -p "$INSTALL_DIR/.tmp"
+	mkdir -p "$INSTALL_DIR/bin"
 	
-	MACHINE_TYPE=`uname -m`
-	[[ $MACHINE_TYPE = "amd64" ]] && MACHINE_TYPE=x86_64 # Fix dla ArchLinuxa i pochodnych
-	if [[ ${MACHINE_TYPE} == 'x86_64' ]];
-	then
-		echo "Downloading 64-bit Java $JAVA_VERSION runtime...";
-		echo "";
-		wget $JRE_X64 -O $INSTALL_DIR/.tmp/runtime.tar.gz
-		if [[ $? -ne 0 ]]; then echo "Download runtime failed!!!"; exit; fi;
-		echo "";
-	elif [[ ${MACHINE_TYPE} == 'i586' ]];
-	then
-		echo "Using 32Bit computer is not recommended, upgrade PC to 64Bit CPU or install 64Bit OS"
-		echo "Downloading 32-bit Java $JAVA_VERSION runtime...";
-		echo "";
-		wget $JRE_I586 -O $INSTALL_DIR/.tmp/runtime.tar.gz
-		if [ $? -ne 0 ]; then echo "Download runtime failed!!!"; exit; fi;
-		echo "";
-	else 
-		echo "Unsupported architecture ${MACHINE_TYPE}...";
-		echo "";
-		exit;
-	fi;
-
-	echo "Extracting...";
-	tar xzf $INSTALL_DIR/.tmp/runtime.tar.gz -C $INSTALL_DIR/runtime
+	distroSpecSetup
 	
-	$JAVA_HOME/bin/java -version 2> /dev/null
-	ERROR=$?
-	if [ $ERROR -ne 0 ];
-	then
-		echo "Process launch failed! Check this message...";
-		$JAVA_HOME/bin/java -version
-		exit
-	else
-		echo "Download latest launcher bootstrap..."
-		wget $LAUNCHER_JAR -O $INSTALL_DIR/bin/bootstrap.jar
-		if [ $? -ne 0 ]; then echo "Downloading launcher failed!!!"; exit; fi;
-	fi;
-
-	echo "$INSTALL_DIR/bin" > $HOME/.crystalinst
+	if [[ "$LINUX" == 1 ]]; then
+		setupRuntime
+	fi
 	
-	wget $ICON -O $INSTALL_DIR/icon.png
+	echo "Download latest launcher bootstrap..."
+	downloadFile "$LAUNCHER_JAR" "$INSTALL_DIR/bin/bootstrap.jar"	
+	downloadFile "$ICON" "$INSTALL_DIR/icon.png"	
+	downloadFile "$LAUNCHER_SCRIPT" "$INSTALL_DIR/launcher.sh"
 	
-	wget $LAUNCHER_SCRIPT -O $INSTALL_DIR/launcher.sh
-	if [ $? -ne 0 ]; then echo "Downloading launcher failed!!!"; exit; fi;
+	echo "$INSTALL_DIR/bin" > "$HOME/.crystalinst"	
 	
 	chmod 775 "$INSTALL_DIR/launcher.sh"
 	
-	mkdir -p $HOME/.local/share/applications
+	mkdir -p "$HOME/.local/share/applications"
 	
-	echo -e $ACTIVATOR > $HOME/.local/share/applications/CrystalLauncher.desktop
-	update-desktop-database $HOME/.local/share/applications
-	
-	distroSpecSetup
+	echo -e $ACTIVATOR > "$HOME/.local/share/applications/CrystalLauncher.desktop"
+	update-desktop-database "$HOME/.local/share/applications"
 
-	echo `date` > $INSTALL_DIR/installFlag
+	echo `date` > "$INSTALL_DIR/installFlag"
 }
 
 function runCrystal {
-    	if [ ! -f $INSTALL_DIR/bin/launcher.jar ];
-		then
-			touch $INSTALL_DIR/bin/launcher.jar;
-		fi;
+	if [[ ! -f "$INSTALL_DIR/bin/launcher.jar" ]]; then
+		touch "$INSTALL_DIR/bin/launcher.jar";
+	fi;
 		
-		if [ $DEBUG -ne 0 ]; then
-			(cd $INSTALL_DIR && exec $JAVA_HOME/bin/java -jar $INSTALL_DIR/bin/bootstrap.jar $@)
-		else
-			(cd $INSTALL_DIR && exec $JAVA_HOME/bin/java -jar $INSTALL_DIR/bin/bootstrap.jar $@) > /dev/null
-		fi
+	OS=`osType`
+	case "$OS" in
+		fbsdpkg)
+			if [[ $DEBUG -ne 0 ]]; then
+				(cd "$INSTALL_DIR" && exec java -jar "$INSTALL_DIR/bin/bootstrap.jar")
+			else
+				(cd "$INSTALL_DIR" && exec java -jar "$INSTALL_DIR/bin/bootstrap.jar") > /dev/null
+			fi
+			;;
+		*)
+			export JAVA_HOME=$INSTALL_DIR/runtime/jre$JAVA_VERSION
+                	export PATH=$JAVA_HOME/bin:$PATH
+			if [[ $DEBUG -ne 0 ]]; then
+				(cd "$INSTALL_DIR" && exec "$JAVA_HOME/bin/java" -jar "$INSTALL_DIR/bin/bootstrap.jar")
+			else
+				(cd "$INSTALL_DIR" && exec "$JAVA_HOME/bin/java" -jar "$INSTALL_DIR/bin/bootstrap.jar") > /dev/null
+			fi
+			;;
+	esac
 }
 
 case "$1" in
@@ -193,22 +244,22 @@ case "$1" in
 		exit
 		;;
 	"--uninstall")
-		rm -rf $INSTALL_DIR;
-		rm $HOME/.local/share/applications/CrystalLauncher.desktop
-		update-desktop-database $HOME/.local/share/applications
+		rm -rf "$INSTALL_DIR"
+		rm "$HOME/.local/share/applications/CrystalLauncher.desktop"
+		update-desktop-database "$HOME/.local/share/applications"
 		exit
 		;;
 	"--force-update")
-		rm -rf $INSTALL_DIR/bin/lib;
-		echo "" > $INSTALL_DIR/bin/launcher.jar;
+		rm -rf "$INSTALL_DIR/bin/lib"
+		echo "" > "$INSTALL_DIR/bin/launcher.jar"
 		;;
 	"--install-only")
 		installCl;
 		exit
 		;;
 	"--clean-cache")
-		rm -rf $INSTALL_DIR/bin/cache
-		rm -rf $INSTALL_DIR/bin/Downloads
+		rm -rf "$INSTALL_DIR/bin/cache"
+		rm -rf "$INSTALL_DIR/bin/Downloads"
 		;;
 	"--debug")
 		DEBUG=1
@@ -218,7 +269,7 @@ case "$1" in
 		exit 0
 esac
 		
-if [ -f $INSTALL_DIR/installFlag ] && [ -f $INSTALL_DIR/bin/bootstrap.jar ];
+if [ -f "$INSTALL_DIR/installFlag" ] && [ -f "$INSTALL_DIR/bin/bootstrap.jar" ];
 then
 	runCrystal;
 else
