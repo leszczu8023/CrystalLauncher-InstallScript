@@ -7,7 +7,7 @@ JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
 
 ICON='http://main.crystal-launcher.pl/releases/icon.png'
 
-LAUNCHER_SCRIPT='https://raw.githubusercontent.com/leszczu8023/CrystalLauncher-LinuxScript/master/crystallauncher.sh'
+LAUNCHER_SCRIPT='https://raw.githubusercontent.com/leszczu8023/CrystalLauncher-InstallScript/master/crystallauncher.sh'
 
 LAUNCHER_JAR='http://main.crystal-launcher.pl/releases/other/CrystalLauncher.jar'
 ACTIVATOR="[Desktop Entry]\n
@@ -208,8 +208,10 @@ function installCl {
 	
 	echo -e $ACTIVATOR > "$HOME/.local/share/applications/CrystalLauncher.desktop"
 	
-	which update-desktop-database > /dev/null  && { update-desktop-database "$HOME/.local/share/applications"; }
-
+	if [[ -x "`which update-desktop-database `" ]]; then
+		update-desktop-database "$HOME/.local/share/applications";
+	fi;
+	
 	echo `date` > "$INSTALL_DIR/installFlag"
 }
 
