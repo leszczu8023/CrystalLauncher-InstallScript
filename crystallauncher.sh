@@ -208,7 +208,7 @@ function installCl {
 	
 	echo -e $ACTIVATOR > "$HOME/.local/share/applications/CrystalLauncher.desktop"
 	
-	if [[ -x "`which update-desktop-database `" ]]; then
+	if [[ -f "`which update-desktop-database `" ]]; then
 		update-desktop-database "$HOME/.local/share/applications";
 	fi;
 	
