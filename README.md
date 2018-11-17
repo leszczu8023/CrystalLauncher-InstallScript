@@ -1,4 +1,4 @@
-# Crystal Launcher installation script for Linux
+# Crystal Launcher installation script for Linux/Unix
 
 Simple installation method:
 
@@ -10,5 +10,5 @@ wget -O - http://bit.ly/crystal4Linux | bash
 * Ubuntu 18.10 amd64
 * openSUSE Tumbleweed 2018-11-12 amd64
 
-## TODO: Need to be tested
+## Checked unix operating systems:
 * FreeBSD
