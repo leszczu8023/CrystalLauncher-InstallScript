@@ -26,7 +26,7 @@ DEBUG=0
 function runAsRoot {
 	if [[ "`whoami`" == "root" ]]; then
 		$*
-	elif [[ `which sudo` == 0 ]]; then
+	elif [[ -x "$(command -v sudo)" ]]; then
 		sudo $*
 	else
 		su root -c "$*"
@@ -37,16 +37,13 @@ function downloadFile {
 	#$1 - source URL
 	#$2 - target location
     
-	IS_WGET=`which wget > /dev/null && { echo 1; }`
-	IS_CURL=`which curl > /dev/null && { echo 1; }`
-    
-	if [[ "$IS_WGET" == 1 ]]; then
+	if [[ -x "$(command -v wget)" ]]; then
 		wget "$1" -O "$2";
 		if [[ $? -ne 0 ]]; then 
 			echo "Downloading launcher failed!!!"; 
 			exit 1; 
 		fi;
-	elif [[ "$IS_CURL" == 0 ]]; then
+	elif [[ -x "$(command -v curl)" ]]; then
 		curl -L -o "$2" "$1";
 		if [[ $? -ne 0 ]]; then 
 			echo "Downloading launcher failed!!!"; 
