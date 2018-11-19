@@ -271,6 +271,7 @@ case "$1" in
 	"--help")
 		echo "Usage: $0 --[debug|reinstall|uninstall|install-only|clean-cache|force-update]"
 		exit 0
+		;;
 esac
 		
 if [ -f "$INSTALL_DIR/installFlag" ] && [ -f "$INSTALL_DIR/bin/bootstrap.jar" ];
