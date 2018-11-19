@@ -108,9 +108,9 @@ function setupDebian {
 
 function setupFreeBSD {
 	echo "Checking packages... Please enter root password if needed"
-	pkgInstaIfNe java/openjdk8-jre
-	pkgInstaIfNe java/openjfx8-devel
-	pkgInstaIfNe games/minecraft-client
+	pkgInstaIfNe openjdk8-jre
+	pkgInstaIfNe openjfx8-devel
+	pkgInstaIfNe minecraft-client
 	
 	echo "customjvmdir.path=/usr/local/share/minecraft-client/minecraft-runtime">"$INSTALL_DIR/bin/config.prop"
 	echo "customjvmdir.use=true">>"$INSTALL_DIR/bin/config.prop"
