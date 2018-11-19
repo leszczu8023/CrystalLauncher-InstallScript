@@ -93,6 +93,14 @@ function aptInstaIfNe {
 	fi;
 }
 
+function pkgInstaIfNe {
+	pkg info -Ix $1
+	if [ "$?" -ne 0  ];
+	then
+		runAsRoot env ASSUME_ALWAYS_YES=YES pkg install $1;
+	fi;
+}
+
 function setupDebian {
 	echo "Checking APT packages... Please enter root password if needed"
 	aptInstaIfNe libgtk2.0-0;
@@ -100,7 +108,9 @@ function setupDebian {
 
 function setupFreeBSD {
 	echo "Checking packages... Please enter root password if needed"
-	runAsRoot env ASSUME_ALWAYS_YES=YES pkg install java/openjdk8-jre java/openjfx8-devel games/minecraft-client
+	pkgInstaIfNe java/openjdk8-jre
+	pkgInstaIfNe java/openjfx8-devel
+	pkgInstaIfNe games/minecraft-client
 	
 	echo "customjvmdir.path=/usr/local/share/minecraft-client/minecraft-runtime">"$INSTALL_DIR/bin/config.prop"
 	echo "customjvmdir.use=true">>"$INSTALL_DIR/bin/config.prop"
