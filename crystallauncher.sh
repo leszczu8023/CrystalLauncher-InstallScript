@@ -3,7 +3,7 @@
 INSTALL_DIR=$HOME/.crystalLauncher
 
 JRE_I586='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-i586.tar.gz'
-JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
+JRE_AMD64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
 
 ICON='http://main.crystal-launcher.pl/releases/icon.png'
 
@@ -23,10 +23,12 @@ Categories=Game;\n"
 JAVA_VERSION='1.8.0_181'
 DEBUG=0
 
+whoami | grep -q root && exit 1
+# Odpalenie czegokolwiek z Javy jako root nie powinno być dozwolone
+# Skrypt nie powinien odpalać się jako root, bo nie ma takiej potrzeby
+
 function runAsRoot {
-	if [[ "`whoami`" == "root" ]]; then
-		$*
-	elif [[ -x "$(command -v sudo)" ]]; then
+	if [[ -x "$(command -v sudo)" ]]; then
 		sudo $*
 	else
 		su root -c "$*"
@@ -34,11 +36,11 @@ function runAsRoot {
 }
 
 function downloadFile {
-	#$1 - source URL
-	#$2 - target location
+	# "$1" - source URL
+	# "$2" - target location
     
 	if [[ -x "$(command -v wget)" ]]; then
-		wget "$1" -O "$2";
+		wget -c "$1" -O "$2"; # Jakby internet się zerwał w trakcie, to dokończy pobieranie
 		if [[ $? -ne 0 ]]; then 
 			echo "Downloading launcher failed!!!"; 
 			exit 1; 
@@ -83,7 +85,7 @@ function osType {
 }
 
 function notImplemented {
-	echo "Distro not implemented or not fully checked... Some things may not work propertly!"
+	echo "OS not implemented or not fully checked... Some things may not work propertly!"
 }
 
 function aptInstaIfNe {
@@ -93,13 +95,7 @@ function aptInstaIfNe {
 	fi;
 }
 
-function pkgInstaIfNe {
-	pkg info -Ix $1
-	if [ "$?" -ne 0  ];
-	then
-		runAsRoot env ASSUME_ALWAYS_YES=YES pkg install $1;
-	fi;
-}
+# pkg nie reinstaluje pakietów
 
 function setupDebian {
 	echo "Checking APT packages... Please enter root password if needed"
@@ -108,9 +104,7 @@ function setupDebian {
 
 function setupFreeBSD {
 	echo "Checking packages... Please enter root password if needed"
-	pkgInstaIfNe openjdk8-jre
-	pkgInstaIfNe openjfx8-devel
-	pkgInstaIfNe minecraft-client
+	runAsRoot sh -c "yes | pkg install openjdk8-jre openjfx8-devel minecraft-client"
 	
 	echo "customjvmdir.path=/usr/local/share/minecraft-client/minecraft-runtime">"$INSTALL_DIR/bin/config.prop"
 	echo "customjvmdir.use=true">>"$INSTALL_DIR/bin/config.prop"
@@ -152,7 +146,7 @@ function setupRuntime {
 	then
 		echo "Downloading 64-bit Java $JAVA_VERSION runtime...";
 		echo "";
-		downloadFile "$JRE_X64" "$INSTALL_DIR/.tmp/runtime.tar.gz"
+		downloadFile "$JRE_AMD64" "$INSTALL_DIR/.tmp/runtime.tar.gz"
 		echo ""
 	elif [[ ${MACHINE_TYPE} == 'i586' ]];
 	then
@@ -162,12 +156,12 @@ function setupRuntime {
 		downloadFile "$JRE_I586" "$INSTALL_DIR/.tmp/runtime.tar.gz"
 		echo ""
 	else 
-		echo "Unsupported architecture ${MACHINE_TYPE}...";
+		echo "Unsupported architecture ${MACHINE_TYPE}, it could be a bug...";
 		echo "";
 		exit 1
 	fi;
 
-	echo "Extracting...";
+	echo "Extracting Java to $JAVA_HOME...";
 	tar xzf "$INSTALL_DIR/.tmp/runtime.tar.gz" -C "$INSTALL_DIR/runtime"
 	
 	rm "$INSTALL_DIR/.tmp/runtime.tar.gz"
@@ -184,9 +178,8 @@ function setupRuntime {
 
 function installCl {
 	echo "Crystal Launcher installation script";
-	if [[ -e $INSTALL_DIR ]];
-	then
-		echo "Removing old directory...";
+	if [[ -e $INSTALL_DIR ]]; then
+		echo "Removing old directory(saves will be annihilated)...";
 		rm -rf $INSTALL_DIR;
 	fi;
 
@@ -202,7 +195,7 @@ function installCl {
 		setupRuntime
 	fi
 	
-	echo "Download latest launcher bootstrap..."
+	echo "Downloading latest launcher bootstrap..."
 	downloadFile "$LAUNCHER_JAR" "$INSTALL_DIR/bin/bootstrap.jar"	
 	downloadFile "$ICON" "$INSTALL_DIR/icon.png"	
 	downloadFile "$LAUNCHER_SCRIPT" "$INSTALL_DIR/launcher.sh"
