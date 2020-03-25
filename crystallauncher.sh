@@ -61,6 +61,7 @@ function osType {
 		Linux)
 			LINUX=1
 			FBSD=0
+			which urpmq > /dev/null && { echo mageia; return; }
 			which yum > /dev/null && { echo centos; return; }
 			which zypper > /dev/null  && { echo opensuse; return; }
 			which pacman > /dev/null  && { echo archlinux; return; }
@@ -101,9 +102,23 @@ function pkgInstaIfNe {
 	fi;
 }
 
+function urpmiInstaIfNe {
+	rpm -q --whatprovides $1
+	if [ "$?" -ne 0 ];
+	then
+		# sudo is misconfigured by default on Mageia
+		su - -c "urpmi --auto $1";
+	fi;
+}
+
 function setupDebian {
 	echo "Checking APT packages... Please enter root password if needed"
 	aptInstaIfNe libgtk2.0-0;
+}
+
+function setupMageia {
+	echo "Checking URPMI packages... Please enter root password if needed"
+	urpmiInstaIfNe javafx
 }
 
 function setupFreeBSD {
@@ -131,6 +146,9 @@ function distroSpecSetup {
 			;;
 		debian)
 			setupDebian;
+			;;
+		mageia)
+			setupMageia;
 			;;
 		fbsdpkg)
 			setupFreeBSD;
@@ -197,10 +215,15 @@ function installCl {
 	
 	distroSpecSetup
 	
-	if [[ "`uname`" == 'Linux' ]]; then
-		echo "Installing portable Java environment..."
-		setupRuntime
-	fi
+	case "$OS" in
+		fbsdpkg|mageia)
+			# javafx is already properly packaged on these systems
+			;;
+		*)
+			echo "Installing portable Java environment..."
+			setupRuntime
+			;;
+	esac
 	
 	echo "Download latest launcher bootstrap..."
 	downloadFile "$LAUNCHER_JAR" "$INSTALL_DIR/bin/bootstrap.jar"	
@@ -229,7 +252,7 @@ function runCrystal {
 		
 	OS=`osType`
 	case "$OS" in
-		fbsdpkg)
+		fbsdpkg|mageia)
 			if [[ $DEBUG -ne 0 ]]; then
 				(cd "$INSTALL_DIR" && exec java -jar "$INSTALL_DIR/bin/bootstrap.jar")
 			else
