@@ -199,11 +199,6 @@ function installCl {
 	
 	distroSpecSetup
 	
-	if [[ "`uname`" == 'Linux' ]]; then
-		echo "Installing portable Java environment..."
-		setupRuntime
-	fi
-	
 	echo "Download latest launcher bootstrap..."
 	downloadFile "$LAUNCHER_JAR" "$INSTALL_DIR/bin/bootstrap.jar"	
 	downloadFile "$ICON" "$INSTALL_DIR/icon.png"	
@@ -241,6 +236,12 @@ function runCrystal {
 		*)
 			export JAVA_HOME=$INSTALL_DIR/runtime/jre$JAVA_VERSION
                 	export PATH=$JAVA_HOME/bin:$PATH
+
+                        if [[ ! -d "$JAVA_HOME" ]] && [[  "`uname`" == 'Linux' ]]; then
+                                 echo "Installing portable Java environment..."
+                                 setupRuntime
+                        fi
+
 			if [[ $DEBUG -ne 0 ]]; then
 				(cd "$INSTALL_DIR" && exec "$JAVA_HOME/bin/java" -jar "$INSTALL_DIR/bin/bootstrap.jar")
 			else
