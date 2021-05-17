@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
+VERSION="17.05.2021_01"
+
 INSTALL_DIR=$HOME/.crystalLauncher
 
-JRE_I586='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-i586.tar.gz'
-JRE_X64='http://mirr2.crystal-launcher.pl/jre/jre-8u181-linux-x64.tar.gz'
+JRE_I586='http://mirror.crystal-launcher.net/cdn/jre/jre-8u291-linux-i586.tar.gz'
+JRE_X64='http://mirror.crystal-launcher.net/cdn/jre/jre-8u291-linux-x64.tar.gz'
 
 ICON='http://main.crystal-launcher.pl/releases/icon.png'
 
@@ -20,7 +22,7 @@ Terminal=false\n
 Type=Application\n
 Categories=Game;\n"
 
-JAVA_VERSION='1.8.0_181'
+JAVA_VERSION='1.8.0_291'
 DEBUG=0
 
 function runAsRoot {
@@ -280,7 +282,7 @@ case "$1" in
 		exit 0
 		;;
 esac
-		
+
 if [ -f "$INSTALL_DIR/installFlag" ] && [ -f "$INSTALL_DIR/bin/bootstrap.jar" ];
 then
 	runCrystal;
